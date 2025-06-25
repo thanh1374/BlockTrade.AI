@@ -1,0 +1,27 @@
+[tool.black]
+line-length = 120
+target-version = ['py311']
+include = '\.pyi?$'
+extend-exclude = '''
+^/docs
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 120
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+src_paths = ["app", "tests"]
+
+[build-system]
+requires = ["setuptools>=45", "wheel", "pip>=21"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "blocktrace-ai"
+version = "0.1.0"
+description = "Ethereum wallet analysis and risk assessment tool"
+requires-python = ">=3.11"

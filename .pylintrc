@@ -1,0 +1,21 @@
+[MASTER]
+disable=
+    C0111,  # missing-docstring
+    C0103,  # invalid-name
+    C0116,  # missing-function-docstring
+    W0621,  # redefined-outer-name
+    R0903,  # too-few-public-methods
+    W0622,  # redefined-builtin
+    R0914,  # too-many-locals
+    R0915,  # too-many-locals
+    R1735,  # use-dict-literal
+
+[FORMAT]
+max-line-length=120
+ignore-long-lines=^.*<.*>.*$  # Ignore HTML lines
+
+[MESSAGES CONTROL]
+disable=
+    broad-except,
+    import-error,
+    no-member

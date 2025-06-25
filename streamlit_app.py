@@ -1,13 +1,13 @@
 import streamlit as st
-import time
+
 from app.main import (
-    get_account_balance,
-    get_latest_transactions,
-    classify_wallet,
-    get_eth_price,
-    plot_balance_over_time,
     calculate_risk_score,
-    explain_wallet_behavior
+    classify_wallet,
+    explain_wallet_behavior,
+    get_account_balance,
+    get_eth_price,
+    get_latest_transactions,
+    plot_balance_over_time,
 )
 
 # ========== Page Config ==========
@@ -15,11 +15,12 @@ st.set_page_config(
     page_title="BlockTrace AI",
     page_icon="💎",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="expanded",
 )
 
 # ========== Custom CSS ==========
-st.markdown("""
+st.markdown(
+    """
 <style>
 :root {
     --primary-dark: #0D1117;
@@ -131,7 +132,9 @@ html, body, [class*="css"] {
 }
 
 </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 # ========== Header ==========
 st.markdown("<div class='title'>💎 BlockTrace AI</div>", unsafe_allow_html=True)
@@ -156,7 +159,7 @@ if st.session_state.get("wallet_analyzed") and st.session_state.get("address"):
         tab = st.radio(
             label="Menu",
             options=[" Wallet Overview", " Risk Assessment"],
-            label_visibility="collapsed"
+            label_visibility="collapsed",
         )
 
     with col2:
@@ -167,7 +170,8 @@ if st.session_state.get("wallet_analyzed") and st.session_state.get("address"):
                 wallet_type = classify_wallet(address)
                 eth_price = get_eth_price()
 
-            st.markdown(f"""
+            st.markdown(
+                f"""
             <div class="summary-grid">
                 <div class="summary-item">
                     <span class="summary-key">Address</span>
@@ -186,7 +190,9 @@ if st.session_state.get("wallet_analyzed") and st.session_state.get("address"):
                     <span class="summary-value">{eth_price:,.2f} USD</span>
                 </div>
             </div>
-            """, unsafe_allow_html=True)
+            """,
+                unsafe_allow_html=True,
+            )
 
             st.markdown("#### Portfolio Trend")
             plot_balance_over_time(address)
@@ -199,7 +205,8 @@ if st.session_state.get("wallet_analyzed") and st.session_state.get("address"):
                 for i, tx in enumerate(txs):
                     status_color = "#27AE60" if tx.get("status") == "Success" else "#E74C3C"
                     with st.expander(f"🔹 Tx #{i+1} | {tx.get('value_eth', 0):.4f} ETH | Status: {tx.get('status')}"):
-                        st.markdown(f"""
+                        st.markdown(
+                            f"""
                         <div style='background-color: var(--primary-color); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color);'>
                             <div><b>Timestamp:</b> {tx.get('timestamp')}</div>
                             <div><b>Hash:</b> <code>{tx.get('hash')}</code></div>
@@ -210,7 +217,9 @@ if st.session_state.get("wallet_analyzed") and st.session_state.get("address"):
                             <div><b>Gas Price:</b> {tx.get('gas_price_gwei', 0):.2f} GWei</div>
                             <div><b>Status:</b> <span style='color:{status_color}'>{tx.get('status')}</span></div>
                         </div>
-                        """, unsafe_allow_html=True)
+                        """,
+                            unsafe_allow_html=True,
+                        )
 
         elif tab == " Risk Assessment":
             st.subheader(" Risk Assessment")
@@ -220,11 +229,16 @@ if st.session_state.get("wallet_analyzed") and st.session_state.get("address"):
                     wallet_type = classify_wallet(address)
                     txs = get_latest_transactions(address, 10)
 
-                level, color = ("Low", "#10B981") if risk_score <= 4 else ("Moderate", "#F59E0B") if risk_score <= 7 else ("High", "#DC2626")
+                level, color = (
+                    ("Low", "#10B981")
+                    if risk_score <= 4
+                    else (("Moderate", "#F59E0B") if risk_score <= 7 else ("High", "#DC2626"))
+                )
 
                 colA, colB = st.columns([1, 3])
                 with colA:
-                    st.markdown(f"""
+                    st.markdown(
+                        f"""
                     <div style="background-color: #1E293B; padding: 20px; border-radius: 10px; border: 1px solid #334155;">
                         <h4 style="font-size: 18px; color: #E2E8F0;">Threat Level</h4>
                         <p style="font-size: 24px; font-weight: bold; color: {color}; margin: 0;">{risk_score:.1f}/10</p>
@@ -233,7 +247,9 @@ if st.session_state.get("wallet_analyzed") and st.session_state.get("address"):
                             <div style="width: {risk_score * 10}%; height: 100%; background: linear-gradient(to right, {color}, #FACC15);"></div>
                         </div>
                     </div>
-                    """, unsafe_allow_html=True)
+                    """,
+                        unsafe_allow_html=True,
+                    )
 
                 with colB:
                     st.markdown(explanation, unsafe_allow_html=True)
@@ -242,11 +258,14 @@ if st.session_state.get("wallet_analyzed") and st.session_state.get("address"):
 
                 st.markdown("#### Evaluation Explain")
                 ai_explanation = explain_wallet_behavior(address, risk_score, wallet_type, txs)
-                st.markdown(f"""
+                st.markdown(
+                    f"""
                 <div style="background-color: #1E293B; padding: 1.25rem; border-radius: 12px; border: 1px solid #334155;">
                     {ai_explanation}
                 </div>
-                """, unsafe_allow_html=True)
+                """,
+                    unsafe_allow_html=True,
+                )
 
             except Exception as e:
                 st.error(f" Error: {e}")
