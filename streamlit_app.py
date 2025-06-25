@@ -1,0 +1,256 @@
+import streamlit as st
+import time
+from app.main import (
+    get_account_balance,
+    get_latest_transactions,
+    classify_wallet,
+    get_eth_price,
+    plot_balance_over_time,
+    calculate_risk_score,
+    explain_wallet_behavior
+)
+
+# ========== Page Config ==========
+st.set_page_config(
+    page_title="BlockTrace AI",
+    page_icon="💎",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
+
+# ========== Custom CSS ==========
+st.markdown("""
+<style>
+:root {
+    --primary-dark: #0D1117;
+    --secondary-dark: #161B22;
+    --accent-blue: #3B82F6;
+    --accent-teal: #06B6D4;
+    --light-text: #F1F5F9;
+    --border-color: #30363D;
+    --metric-bg: #1E2530;
+}
+html, body, [class*="css"] {
+    color: var(--light-text);
+}
+.stApp {
+    background: linear-gradient(160deg, var(--primary-dark) 30%, #0F172A 100%);
+}
+.title {
+    text-align: center; 
+    font-size: 2.5rem; 
+    margin-bottom: 1.5rem;
+    font-weight: 600;
+    background: linear-gradient(90deg, var(--accent-teal), var(--accent-blue));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+.menu-container {
+    background-color: var(--secondary-dark);
+    padding: 1rem;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+}
+.stRadio > div {
+    flex-direction: column;
+}
+.stRadio > div > label {
+    background-color: var(--primary-dark);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+}
+.stRadio > div > label:hover {
+    background-color: var(--accent-blue);
+    color: white !important;
+}
+.stRadio > div > label[data-selected="true"] {
+    background-color: var(--accent-teal);
+    color: white !important;
+}
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+    background-color: var(--secondary-dark);
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+}
+.summary-item {
+    display: flex;
+    flex-direction: column;
+    padding: 0.5rem;
+    background-color: var(--metric-bg);
+    border-radius: 8px;
+}
+.summary-key {
+    font-weight: 500;
+    font-size: 0.95rem;
+    color: var(--accent-teal);
+    margin-bottom: 4px;
+}
+.summary-value {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--light-text);
+    word-break: break-word;
+}
+.sub-value {
+    font-size: 0.9rem;
+    color: #CBD5E1;
+}
+.stButton > button {
+    background: linear-gradient(135deg, var(--accent-blue), var(--accent-teal));
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 24px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+    box-shadow: 0 4px 8px rgba(59, 130, 246, 0.15);
+}
+
+.stButton > button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(6, 182, 212, 0.3);
+    background: linear-gradient(135deg, var(--accent-teal), var(--accent-blue));
+}
+
+.stButton > button:active {
+    transform: translateY(0);
+    box-shadow: none;
+    opacity: 0.95;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+# ========== Header ==========
+st.markdown("<div class='title'>💎 BlockTrace AI</div>", unsafe_allow_html=True)
+
+# ========== Input Section ==========
+col1, col2 = st.columns([4, 1])
+address = col1.text_input("**🔗 Enter Ethereum Address**", placeholder="0x...", label_visibility="collapsed")
+analyze_btn = col2.button("Analyze Wallet", use_container_width=True)
+
+if analyze_btn and address:
+    st.session_state["wallet_analyzed"] = True
+    st.session_state["address"] = address
+
+# ========== Main Section After Analysis ==========
+if st.session_state.get("wallet_analyzed") and st.session_state.get("address"):
+    address = st.session_state["address"]
+
+    col1, col2 = st.columns([1, 4])
+
+    with col1:
+        st.markdown("#### Select View")
+        tab = st.radio(
+            label="Menu",
+            options=[" Wallet Overview", " Risk Assessment"],
+            label_visibility="collapsed"
+        )
+
+    with col2:
+        if tab == " Wallet Overview":
+            st.subheader(" Wallet Overview")
+            with st.spinner("Loading wallet info..."):
+                balance = get_account_balance(address)
+                wallet_type = classify_wallet(address)
+                eth_price = get_eth_price()
+
+            st.markdown(f"""
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <span class="summary-key">Address</span>
+                    <span class="summary-value">{address[:15]}...{address[-4:]}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-key">Wallet Type</span>
+                    <span class="summary-value">{wallet_type}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-key">ETH Balance</span>
+                    <span class="summary-value">{balance:.4f} <br><span class="sub-value">≈ {balance * eth_price:,.2f} USD</span></span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-key">ETH Price</span>
+                    <span class="summary-value">{eth_price:,.2f} USD</span>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+
+            st.markdown("#### Portfolio Trend")
+            plot_balance_over_time(address)
+
+            st.markdown("#### Recent Transactions")
+            txs = get_latest_transactions(address, 10)
+            if not txs:
+                st.info("No transactions found.")
+            else:
+                for i, tx in enumerate(txs):
+                    status_color = "#27AE60" if tx.get("status") == "Success" else "#E74C3C"
+                    with st.expander(f"🔹 Tx #{i+1} | {tx.get('value_eth', 0):.4f} ETH | Status: {tx.get('status')}"):
+                        st.markdown(f"""
+                        <div style='background-color: var(--primary-color); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color);'>
+                            <div><b>Timestamp:</b> {tx.get('timestamp')}</div>
+                            <div><b>Hash:</b> <code>{tx.get('hash')}</code></div>
+                            <div><b>From:</b> {tx.get('from')}</div>
+                            <div><b>To:</b> {tx.get('to')}</div>
+                            <div><b>Value:</b> {tx.get('value_eth', 0):.4f} ETH (${tx.get('value_usd', 0):,.2f})</div>
+                            <div><b>Gas Used:</b> {tx.get('gas_used')}</div>
+                            <div><b>Gas Price:</b> {tx.get('gas_price_gwei', 0):.2f} GWei</div>
+                            <div><b>Status:</b> <span style='color:{status_color}'>{tx.get('status')}</span></div>
+                        </div>
+                        """, unsafe_allow_html=True)
+
+        elif tab == " Risk Assessment":
+            st.subheader(" Risk Assessment")
+            try:
+                with st.spinner("Analyzing risk..."):
+                    risk_score, explanation, fig_risk = calculate_risk_score(address)
+                    wallet_type = classify_wallet(address)
+                    txs = get_latest_transactions(address, 10)
+
+                level, color = ("Low", "#10B981") if risk_score <= 4 else ("Moderate", "#F59E0B") if risk_score <= 7 else ("High", "#DC2626")
+
+                colA, colB = st.columns([1, 3])
+                with colA:
+                    st.markdown(f"""
+                    <div style="background-color: #1E293B; padding: 20px; border-radius: 10px; border: 1px solid #334155;">
+                        <h4 style="font-size: 18px; color: #E2E8F0;">Threat Level</h4>
+                        <p style="font-size: 24px; font-weight: bold; color: {color}; margin: 0;">{risk_score:.1f}/10</p>
+                        <p style="font-size: 16px; color: #CBD5E1;">Level: <strong>{level}</strong></p>
+                        <div style="height: 12px; background-color: #334155; border-radius: 6px;">
+                            <div style="width: {risk_score * 10}%; height: 100%; background: linear-gradient(to right, {color}, #FACC15);"></div>
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+
+                with colB:
+                    st.markdown(explanation, unsafe_allow_html=True)
+
+                st.plotly_chart(fig_risk, use_container_width=True)
+
+                st.markdown("#### Evaluation Explain")
+                ai_explanation = explain_wallet_behavior(address, risk_score, wallet_type, txs)
+                st.markdown(f"""
+                <div style="background-color: #1E293B; padding: 1.25rem; border-radius: 12px; border: 1px solid #334155;">
+                    {ai_explanation}
+                </div>
+                """, unsafe_allow_html=True)
+
+            except Exception as e:
+                st.error(f" Error: {e}")
+
+# ========== Footer ==========
+st.markdown("---")
+st.caption("© 2025 BlockTrace AI | v1.0.0 | Built by DSEB64A.NHOT")
