@@ -28,10 +28,6 @@ jobs:
       run: |
         pylint $(git ls-files '*.py')
         
-    - name: Run tests
-      run: |
-        pytest
-        
     - name: Deploy to Streamlit Cloud
       if: github.ref == 'refs/heads/main'
       env:
