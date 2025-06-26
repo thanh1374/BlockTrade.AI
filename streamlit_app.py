@@ -255,15 +255,75 @@ if st.session_state.get("wallet_analyzed") and st.session_state.get("address"):
                     st.markdown(explanation, unsafe_allow_html=True)
 
                 st.plotly_chart(fig_risk, use_container_width=True)
+                st.markdown(
+                    """
+                    <style>
+                    .gradient-header {
+                        font-size: 1.8rem;
+                        font-weight: 600;
+                        margin-bottom: 1rem;
+                        background: linear-gradient(90deg, #3B82F6, #06B6D4);
+                        -webkit-background-clip: text;
+                        -webkit-text-fill-color: transparent;
+                        display: inline-block;
+                    }
+                    .analysis-container {
+                        background-color: #1E293B;
+                        padding: 1.5rem;
+                        border-radius: 12px;
+                        border: 1px solid #334155;
+                        color: #F8FAFC;  /* Very light gray for main text */
+                        font-size: 1.1rem;
+                        line-height: 1.8;
+                    }
+                    
+                    .analysis-container h3 {
+                        color: #60A5FA;  /* Light blue for headings */
+                        margin-bottom: 1rem;
+                        font-size: 1.3rem;
+                    }
+                    
+                    .analysis-container p {
+                        margin-bottom: 1rem;
+                        color: #E2E8F0;  /* Light gray for better readability */
+                    }
+                    
+                    .analysis-container strong {
+                        color: #38BDF8;  /* Bright blue for emphasis */
+                        font-weight: 600;
+                    }
+                    
+                    .analysis-container .metric {
+                        color: #34D399;  /* Mint green for numbers */
+                        font-weight: 600;
+                    }
+                    
+                    .analysis-container .warning {
+                        color: #FBBF24;  /* Amber for warnings */
+                        font-weight: 600;
+                    }
+                    
+                    .analysis-footer {
+                        margin-top: 1rem;
+                        font-size: 0.9rem;
+                        color: #94A3B8;  /* Subtle gray for footer */
+                        border-top: 1px solid #334155;
+                        padding-top: 0.5rem;
+                    }
+                    </style>
+                    """,
+                    unsafe_allow_html=True,
+                )
 
                 st.markdown("#### Evaluation Explain")
                 ai_explanation = explain_wallet_behavior(address, risk_score, wallet_type, txs)
+
                 st.markdown(
                     f"""
-                <div style="background-color: #1E293B; padding: 1.25rem; border-radius: 12px; border: 1px solid #334155;">
-                    {ai_explanation}
-                </div>
-                """,
+                    <div class="analysis-container">
+                        {ai_explanation}
+                    </div>
+                    """,
                     unsafe_allow_html=True,
                 )
 
