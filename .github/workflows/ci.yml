@@ -1,4 +1,4 @@
-name: BlockTrace AI CI
+name: BlockTrade AI CI
 
 on:
   push:
