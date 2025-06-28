@@ -12,5 +12,4 @@ numpy
 werkzeug
 pyvis
 python-louvain
-tensorflow
 protobuf
