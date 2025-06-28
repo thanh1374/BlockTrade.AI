@@ -1,4 +1,3 @@
-import os
 from datetime import datetime
 from typing import Dict
 
@@ -12,8 +11,6 @@ FEATURES = ["value_eth", "gas_price_gwei", "gas_used_pct", "input_len", "is_cont
 
 class MEVDetector:
     def __init__(self, model_path: str = "mev_bot_detector.keras"):
-        os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-        tf.config.set_visible_devices([], "GPU")
 
         try:
             # Load and compile model for CPU
