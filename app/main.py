@@ -1,14 +1,25 @@
-import json
-import time
-from datetime import datetime
-
-import numpy as np
-import pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
-import requests
+import random
 import streamlit as st
 from requests import get
+from matplotlib import pyplot as plt
+from datetime import datetime
+import requests
+import plotly.graph_objects as go
+import pandas as pd
+import plotly.express as px
+import time
+import requests
+import json
+import google.generativeai as genai
+import numpy as np
+from pyvis.network import Network
+import community
+import streamlit.components.v1 as components
+import networkx as nx
+import tempfile
+from community import best_partition
+from collections import deque
+
 
 from app.config import BASE_URL, ETHER_VALUE, ETHERSCAN_API_KEY, url
 
@@ -374,3 +385,213 @@ Summarize wallet behavior, potential risks, and red flags in 5-10 sentences.
             return f"⚠️ Error analyzing wallet behavior: {str(e)}"
 
     return "⚠️ Unable to complete wallet analysis after multiple attempts"
+
+def prepareGraph(output_path, json_data):
+    """
+    Tạo file graph.json.js từ chuỗi JSON
+    
+    Parameters:
+        output_path (str): Đường dẫn đến file đầu ra
+        json_data (str): Chuỗi JSON chứa dữ liệu đồ thị
+    """
+    content = f"var rendru = {json_data};"
+    
+    with open(output_path, 'w', encoding='utf-8') as f:
+        f.write(content)
+    
+    return True
+
+def ranker(database, top):
+    newDatabase = {}
+    for node in database:
+        newDatabase[node] = {}
+        topSize = [0] * top
+        topAdd = [''] * top
+        for each in database[node]:
+            minimum = min(topSize)
+            if database[node][each] > minimum:
+                index = topSize.index(minimum)
+                topSize[index] = database[node][each]
+                topAdd[index] = each
+        for size, address in zip(topSize, topAdd):
+            newDatabase[node][address] = size
+    return newDatabase
+
+def trace_related_nodes(raw_links, center_node, max_depth):
+    visited = set()
+    queue = [(center_node, 0)]
+    traced_nodes = set()
+    traced_edges = set()
+
+    while queue:
+        current_node, depth = queue.pop(0)
+        if depth > max_depth or current_node in visited:
+            continue
+
+        visited.add(current_node)
+        traced_nodes.add(current_node)
+
+        # Giao dịch đi từ current_node
+        for to_node, value in raw_links.get(current_node, {}).items():
+            traced_edges.add((current_node, to_node, value))
+            if to_node not in visited:
+                queue.append((to_node, depth + 1))
+
+        # Giao dịch đến current_node
+        for from_node, targets in raw_links.items():
+            if current_node in targets:
+                traced_edges.add((from_node, current_node, targets[current_node]))
+                if from_node not in visited:
+                    queue.append((from_node, depth + 1))
+
+    return traced_nodes, traced_edges
+
+
+def genLocation():
+    x, y = random.randint(1, 800), random.randint(1, 500)
+    return random.choice([x, -x]), random.choice([y, -y])
+
+def bfs_clusters(graph: nx.Graph, center_id: str) -> dict:
+    clusters = {}
+    visited = set()
+    queue = [(center_id, 0)]
+
+    while queue:
+        node, depth = queue.pop(0)
+        if node in visited:
+            continue
+        visited.add(node)
+        clusters[node] = depth
+        for neighbor in graph.neighbors(node):
+            if neighbor not in visited:
+                queue.append((neighbor, depth + 1))
+
+    return clusters
+
+
+def display_graph_pyvis(graph_json: dict, center_wallet: str = None):
+    # Tạo đồ thị từ dữ liệu
+    G = nx.Graph()
+    for node in graph_json["nodes"]:
+        G.add_node(node["id"], label=node["label"], size=node.get("size", 10))
+    for edge in graph_json["edges"]:
+        G.add_edge(edge["source"], edge["target"], weight=edge.get("size", 1))
+
+    # Xác định node trung tâm
+    center_id = next(
+        (node["id"] for node in graph_json["nodes"] if center_wallet and center_wallet.lower() in node["id"].lower()),
+        None
+    )
+
+    # Phân cụm BFS
+    bfs_partition = bfs_clusters(G, center_id) if center_id else {node: 0 for node in G.nodes()}
+
+    # Màu theo độ sâu BFS
+    cluster_colors = [
+        "#FACC15", "#2dd4bf", "#3b82f6", "#8b5cf6", "#ec4899",
+        "#f97316", "#22c55e", "#f43f5e", "#eab308", "#0ea5e9"
+    ]
+
+    # Tạo PyVis graph
+    net = Network(
+        height="650px",
+        width="100%",
+        bgcolor="#0F172A",
+        font_color="white",
+        directed=False
+    )
+
+    for node_id, node_data in G.nodes(data=True):
+        is_center = node_id == center_id
+        depth = bfs_partition.get(node_id, 0)
+        color = "#FACC15" if is_center else cluster_colors[depth % len(cluster_colors)]
+        size = 25 if is_center else node_data.get("size", 10)
+
+        net.add_node(
+            node_id,
+            label=" ",
+            title=node_data.get("label", ""),
+            size=size,
+            color=color,
+            hidden_label=True,
+            borderWidth=0
+        )
+
+    # Thêm edge
+    for u, v, edge_data in G.edges(data=True):
+        weight = edge_data.get("weight", 1)
+        if center_id:
+            if v == center_id:
+                color = "#10B981"
+            elif u == center_id:
+                color = "#EF4444"
+            else:
+                color = "#888888"
+        else:
+            color = "#AAAAAA"
+        net.add_edge(u, v, value=weight, color=color)
+
+    # Tuỳ chỉnh options
+    net.set_options("""
+    {
+      "nodes": {
+        "font": { "size": 16 },
+        "scaling": { "min": 10, "max": 30 },
+        "borderWidth": 0
+      },
+      "edges": { "smooth": false },
+      "interaction": {
+        "hover": false,
+        "navigationButtons": true,
+        "keyboard": true
+      },
+      "physics": {
+        "enabled": true,
+        "barnesHut": {
+          "gravitationalConstant": -8000,
+          "centralGravity": 0.3
+        }
+      }
+    }
+    """)
+
+    # Lưu HTML tạm
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".html") as tmp_file:
+        net.save_graph(tmp_file.name)
+        with open(tmp_file.name, "r", encoding="utf-8") as f:
+            html = f.read()
+
+    custom_js = """
+    <script type="text/javascript">
+        document.addEventListener("DOMContentLoaded", function() {
+            let selectedNode = null;
+            const nodes = network.body.data.nodes;
+            network.on("click", function(params) {
+                if (params.nodes.length > 0) {
+                    const nodeId = params.nodes[0];
+                    const node = network.body.nodes[nodeId];
+                    const label = node.options.title || "";
+                    if (selectedNode === nodeId) {
+                        nodes.update({ id: nodeId, label: "" });
+                        selectedNode = null;
+                    } else {
+                        nodes.get().forEach(n => nodes.update({ id: n.id, label: "" }));
+                        nodes.update({ id: nodeId, label: label });
+                        selectedNode = nodeId;
+                    }
+                } else {
+                    nodes.get().forEach(n => nodes.update({ id: n.id, label: "" }));
+                    selectedNode = null;
+                }
+            });
+        });
+    </script>
+    """
+
+    html = html.replace("</body>", custom_js + "</body>")
+    html = html.replace(
+        "<head>",
+        "<head><style>body { margin: 0; background-color: #0F172A !important; }</style>"
+    )
+
+    components.html(html, height=700, scrolling=False)
