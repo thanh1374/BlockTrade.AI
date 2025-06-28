@@ -13,3 +13,5 @@ werkzeug
 pyvis
 python-louvain
 protobuf
+tensorflow==2.19.0
+
