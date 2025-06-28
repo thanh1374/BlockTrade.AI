@@ -1,5 +1,6 @@
 import streamlit as st
 
+import pandas as pd
 from app.main import (
     calculate_risk_score,
     classify_wallet,
@@ -9,6 +10,7 @@ from app.main import (
     get_latest_transactions,
     plot_balance_over_time,
 )
+from model import demo_gru_detection
 
 # ========== Page Config ==========
 st.set_page_config(
@@ -223,38 +225,71 @@ if st.session_state.get("wallet_analyzed") and st.session_state.get("address"):
 
         elif tab == " Risk Assessment":
             st.subheader(" Risk Assessment")
+            model_type = st.selectbox(
+                "Select Analysis Model", options=["Risk Score Analysis", "GRU Detection"], key="model_selector"
+            )
             try:
                 with st.spinner("Analyzing risk..."):
-                    risk_score, explanation, fig_risk = calculate_risk_score(address)
-                    wallet_type = classify_wallet(address)
-                    txs = get_latest_transactions(address, 10)
+                    if model_type == "Risk Score Analysis":
+                        risk_score, explanation, fig_risk = calculate_risk_score(address)
+                        wallet_type = classify_wallet(address)
+                        txs = get_latest_transactions(address, 10)
 
-                level, color = (
-                    ("Low", "#10B981")
-                    if risk_score <= 4
-                    else (("Moderate", "#F59E0B") if risk_score <= 7 else ("High", "#DC2626"))
-                )
+                        level, color = (
+                            ("Low", "#10B981")
+                            if risk_score <= 4
+                            else (("Moderate", "#F59E0B") if risk_score <= 7 else ("High", "#DC2626"))
+                        )
 
-                colA, colB = st.columns([1, 3])
-                with colA:
-                    st.markdown(
-                        f"""
-                    <div style="background-color: #1E293B; padding: 20px; border-radius: 10px; border: 1px solid #334155;">
-                        <h4 style="font-size: 18px; color: #E2E8F0;">Threat Level</h4>
-                        <p style="font-size: 24px; font-weight: bold; color: {color}; margin: 0;">{risk_score:.1f}/10</p>
-                        <p style="font-size: 16px; color: #CBD5E1;">Level: <strong>{level}</strong></p>
-                        <div style="height: 12px; background-color: #334155; border-radius: 6px;">
-                            <div style="width: {risk_score * 10}%; height: 100%; background: linear-gradient(to right, {color}, #FACC15);"></div>
-                        </div>
-                    </div>
-                    """,
-                        unsafe_allow_html=True,
-                    )
+                        colA, colB = st.columns([1, 3])
+                        with colA:
+                            st.markdown(
+                                f"""
+                            <div style="background-color: #1E293B; padding: 20px; border-radius: 10px; border: 1px solid #334155;">
+                                <h4 style="font-size: 18px; color: #E2E8F0;">Threat Level</h4>
+                                <p style="font-size: 24px; font-weight: bold; color: {color}; margin: 0;">{risk_score:.1f}/10</p>
+                                <p style="font-size: 16px; color: #CBD5E1;">Level: <strong>{level}</strong></p>
+                                <div style="height: 12px; background-color: #334155; border-radius: 6px;">
+                                    <div style="width: {risk_score * 10}%; height: 100%; background: linear-gradient(to right, {color}, #FACC15);"></div>
+                                </div>
+                            </div>
+                            """,
+                                unsafe_allow_html=True,
+                            )
 
-                with colB:
-                    st.markdown(explanation, unsafe_allow_html=True)
+                        with colB:
+                            st.markdown(explanation, unsafe_allow_html=True)
 
-                st.plotly_chart(fig_risk, use_container_width=True)
+                        st.plotly_chart(fig_risk, use_container_width=True)
+                    elif model_type == "GRU Detection":
+                        txs = get_latest_transactions(address, 10)
+                        if not txs:
+                            st.warning("No transactions found for analysis")
+                        else:
+                            df_transactions = pd.DataFrame(txs)
+                            gru_results = demo_gru_detection(df_transactions)
+                            wallet_type = classify_wallet(address)
+                            # Display MEV analysis results
+                            prob = gru_results["prob"]
+                            risk_color = "#DC2626" if prob > 0.7 else "#F59E0B" if prob > 0.3 else "#10B981"
+                            risk_score = prob * 10
+                            st.markdown(
+                                f"""
+                                <div class="analysis-container">
+                                    <h3>Address Analysis Results</h3>
+                                    <p><strong>Classification:</strong> {gru_results["label"]}</p>
+                                    <p><strong>Confidence:</strong> {gru_results["confidence"]:.2%}</p>
+                                    <p><strong>Risk Level:</strong> <span style="color: {risk_color}">{gru_results["risk_level"]}</span></p>
+                                    <p><strong>Transactions Analyzed:</strong> {gru_results["num_transactions"]}</p>
+                                    <div class="analysis-footer">
+                                        Analysis Time: {gru_results["analysis_time"]}
+                                    </div>
+                                </div>
+                                """,
+                                unsafe_allow_html=True,
+                            )
+                    else:
+                        st.error("Please select a valid analysis model.")
                 st.markdown(
                     """
                     <style>

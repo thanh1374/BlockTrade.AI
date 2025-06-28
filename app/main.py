@@ -68,10 +68,17 @@ def get_latest_transactions(address, limit=10):
             "from": tx.get("from"),
             "to": tx.get("to"),
             "value_eth": int(tx.get("value", "0")) / ETHER_VALUE,
+            "time_utc": int(tx.get("timeStamp")),
             "timestamp": datetime.fromtimestamp(int(tx.get("timeStamp"))).strftime("%Y-%m-%d %H:%M:%S"),
             "gas_used": int(tx.get("gasUsed", "0")),
             "gas_price_gwei": int(tx.get("gasPrice", "0")) / (10**9),
             "status": "Success" if tx.get("isError", "0") == "0" else "Failed",
+            "gas_price": int(tx.get("gasPrice", "0")) / (10**9),
+            "input_len": len(tx.get("input")),
+            "is_contract_call": int(len(tx.get("input")) > 2),
+            "failed": int(tx.get("isError", "0") == "1"),
+            "gas_used_pct": int(tx.get("gasUsed", "0")) / int(tx.get("gas", "0")),
+            "blockNumber": (tx.get("blockNumber", "0")),
         }
         latest_transactions.append(tx_data)
 
