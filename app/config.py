@@ -1,11 +1,7 @@
-import os
+import streamlit as st
 
-from dotenv import load_dotenv
-
-load_dotenv()
-
-ETHERSCAN_API_KEY = os.getenv("ETHERSCAN_API_KEY")
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+ETHERSCAN_API_KEY = st.secrets["api_keys"]["ETHERSCAN_API_KEY"]
+GEMINI_API_KEY = st.secrets["api_keys"]["GEMINI_API_KEY"]
 ETHER_VALUE = 10**18
 
 BASE_URL = "https://api.etherscan.io/api"
