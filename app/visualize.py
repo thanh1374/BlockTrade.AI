@@ -5,6 +5,7 @@ from collections import defaultdict
 from app.main import make_api_url, genLocation, ranker, trace_related_nodes, prepareGraph
 from collections import deque
 
+
 def visualize_wallet(wallet_address: str, depth: int) -> tuple[bool, str]:
     try:
         if not wallet_address:
@@ -51,13 +52,9 @@ def visualize_wallet(wallet_address: str, depth: int) -> tuple[bool, str]:
             if not node:
                 continue  # Skip empty node
             x, y = genLocation()
-            graph_json["nodes"].append({
-                "label": node,
-                "x": x,
-                "y": y,
-                "id": f"id={node}",
-                "size": 15 if node == center_node else 10
-            })
+            graph_json["nodes"].append(
+                {"label": node, "x": x, "y": y, "id": f"id={node}", "size": 15 if node == center_node else 10}
+            )
 
         # Add edges
         for from_addr, to_addr, value in traced_edges:
@@ -67,12 +64,14 @@ def visualize_wallet(wallet_address: str, depth: int) -> tuple[bool, str]:
             if key in processed_edges:
                 continue
             size = min(value, 20)
-            graph_json["edges"].append({
-                "source": f"id={from_addr}",
-                "target": f"id={to_addr}",
-                "id": edge_id,
-                "size": size / 3 if size > 3 else size
-            })
+            graph_json["edges"].append(
+                {
+                    "source": f"id={from_addr}",
+                    "target": f"id={to_addr}",
+                    "id": edge_id,
+                    "size": size / 3 if size > 3 else size,
+                }
+            )
             edge_id += 1
             processed_edges.add(key)
 

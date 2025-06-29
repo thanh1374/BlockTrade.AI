@@ -1,7 +1,10 @@
+"""
+BlockTrace AI - Ethereum Wallet Analysis Tool
+Copyright (c) 2025 TRADE.AI.NHOT
+Licensed under the MIT License - see LICENSE file for details
+"""
+
 import streamlit as st
-import time
-import os
-import streamlit.components.v1 as components
 import json
 import pandas as pd
 
@@ -13,22 +16,18 @@ from app.main import (
     plot_balance_over_time,
     calculate_risk_score,
     explain_wallet_behavior,
-    display_graph_pyvis
+    display_graph_pyvis,
 )
 from app.visualize import visualize_wallet
 from model import demo_gru_detection
 
 
 # ========== Page Config ==========
-st.set_page_config(
-    page_title="BlockTrace AI",
-    page_icon="💎",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+st.set_page_config(page_title="BlockTrace AI", page_icon="💎", layout="wide", initial_sidebar_state="expanded")
 
 # ========== Custom CSS ==========
-st.markdown("""<style>
+st.markdown(
+    """<style>
 :root {
     --primary-dark: #0D1117;
     --secondary-dark: #161B22;
@@ -126,7 +125,9 @@ html, body, [class*="css"] { color: var(--light-text); }
     opacity: 0.95;
 }
 </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 # ========== Header ==========
 st.markdown("<div class='title'>💎 BlockTrace AI</div>", unsafe_allow_html=True)
@@ -149,7 +150,7 @@ if st.session_state.get("wallet_analyzed") and st.session_state.get("address"):
         tab = st.radio(
             label="Menu",
             options=[" Wallet Overview", " Risk Assessment", " Wallet Graph"],
-            label_visibility="collapsed"
+            label_visibility="collapsed",
         )
 
     with col2:
@@ -160,7 +161,8 @@ if st.session_state.get("wallet_analyzed") and st.session_state.get("address"):
                 wallet_type = classify_wallet(address)
                 eth_price = get_eth_price()
 
-            st.markdown(f"""
+            st.markdown(
+                f"""
             <div class="summary-grid">
                 <div class="summary-item">
                     <span class="summary-key">Address</span>
@@ -179,7 +181,9 @@ if st.session_state.get("wallet_analyzed") and st.session_state.get("address"):
                     <span class="summary-value">{eth_price:,.2f} USD</span>
                 </div>
             </div>
-            """, unsafe_allow_html=True)
+            """,
+                unsafe_allow_html=True,
+            )
 
             st.markdown("#### Portfolio Trend")
             with st.spinner("Please wait..."):
@@ -193,7 +197,8 @@ if st.session_state.get("wallet_analyzed") and st.session_state.get("address"):
                 for i, tx in enumerate(txs):
                     status_color = "#27AE60" if tx.get("status") == "Success" else "#E74C3C"
                     with st.expander(f"🔹 Tx #{i+1} | {tx.get('value_eth', 0):.4f} ETH | Status: {tx.get('status')}"):
-                        st.markdown(f"""
+                        st.markdown(
+                            f"""
                         <div style='background-color: var(--primary-color); padding: 1rem; border-radius: 8px; border: 1px solid var(--border-color);'>
                             <div><b>Timestamp:</b> {tx.get('timestamp')}</div>
                             <div><b>Hash:</b> <code>{tx.get('hash')}</code></div>
@@ -204,7 +209,9 @@ if st.session_state.get("wallet_analyzed") and st.session_state.get("address"):
                             <div><b>Gas Price:</b> {tx.get('gas_price_gwei', 0):.2f} GWei</div>
                             <div><b>Status:</b> <span style='color:{status_color}'>{tx.get('status')}</span></div>
                         </div>
-                        """, unsafe_allow_html=True)
+                        """,
+                            unsafe_allow_html=True,
+                        )
 
         elif tab == " Risk Assessment":
             st.subheader(" Risk Assessment")
@@ -227,7 +234,7 @@ if st.session_state.get("wallet_analyzed") and st.session_state.get("address"):
                         colA, colB = st.columns([1, 3])
                         with colA:
                             st.markdown(
-                            f"""
+                                f"""
                             <div style="background-color: #1E293B; padding: 20px; border-radius: 10px; border: 1px solid #334155; font-family: 'Segoe UI', sans-serif;">
                                 <h4 style="font-size: 20px; color: #60A5FA; font-weight: 600; margin-bottom: 12px;">Threat Level</h4>
                                 <p style="font-size: 28px; font-weight: 700; color: {color}; margin: 0 0 8px 0;">{risk_score:.1f}/10</p>
@@ -235,16 +242,15 @@ if st.session_state.get("wallet_analyzed") and st.session_state.get("address"):
                                 <div style="height: 12px; background-color: #334155; border-radius: 6px; overflow: hidden;">
                                     <div style="width: {risk_score * 10}%; height: 100%; background: linear-gradient(to right, {color}, #FACC15); transition: width 0.6s ease;"></div>
                             """,
-                            unsafe_allow_html=True,
-                        )
-
+                                unsafe_allow_html=True,
+                            )
 
                         with colB:
                             st.markdown(explanation, unsafe_allow_html=True)
 
                         st.plotly_chart(fig_risk, use_container_width=True)
                     elif model_type == "GRU Detection":
-                        txs = get_latest_transactions(address, 10)
+                        txs = get_latest_transactions(address, 50)
                         if not txs:
                             st.warning("No transactions found for analysis")
                         else:
@@ -256,7 +262,7 @@ if st.session_state.get("wallet_analyzed") and st.session_state.get("address"):
                             risk_color = "#DC2626" if prob > 0.7 else "#F59E0B" if prob > 0.3 else "#10B981"
                             risk_score = prob * 10
                             st.markdown(
-                            f"""
+                                f"""
                             <div class="analysis-container">
                                 <h3>Address Analysis Results</h3>
                                 <p><strong style="color: #FFFFFF;">Classification:</strong> <span style="color: #F8FAFC;">{gru_results["label"]}</span></p>
@@ -267,8 +273,8 @@ if st.session_state.get("wallet_analyzed") and st.session_state.get("address"):
                                     <span style="color: #94A3B8;">Analysis Time: {gru_results["analysis_time"]}</span>
                                 </div>
                             """,
-                            unsafe_allow_html=True,
-                        )
+                                unsafe_allow_html=True,
+                            )
 
                     else:
                         st.error("Please select a valid analysis model.")
@@ -356,7 +362,7 @@ if st.session_state.get("wallet_analyzed") and st.session_state.get("address"):
                 max_value=10,
                 value=2,
                 step=1,
-                help="How many levels of connections to expand from the wallet."
+                help="How many levels of connections to expand from the wallet.",
             )
 
             generate = st.button("Generate Graph", use_container_width=True)
@@ -373,12 +379,15 @@ if st.session_state.get("wallet_analyzed") and st.session_state.get("address"):
                             json_content = f.read().replace("var rendru = ", "").strip().rstrip(";")
                             graph_data = json.loads(json_content)
 
-                        st.markdown("""
+                        st.markdown(
+                            """
                             <div style='text-align: center; margin-top: 10px;'>
                                 <span style='color: #EF4444; font-weight: bold;'>🔴 Red: Outgoing (Sent)</span> &nbsp;|&nbsp;
                                 <span style='color: #10B981; font-weight: bold;'>🟢 Green: Incoming (Received)</span> 
                             </div>
-                        """, unsafe_allow_html=True)
+                        """,
+                            unsafe_allow_html=True,
+                        )
 
                         display_graph_pyvis(graph_data, center_wallet=address)
 

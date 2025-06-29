@@ -1,24 +1,18 @@
 import random
 import streamlit as st
 from requests import get
-from matplotlib import pyplot as plt
 from datetime import datetime
 import requests
 import plotly.graph_objects as go
 import pandas as pd
 import plotly.express as px
 import time
-import requests
 import json
-import google.generativeai as genai
 import numpy as np
 from pyvis.network import Network
-import community
 import streamlit.components.v1 as components
 import networkx as nx
 import tempfile
-from community import best_partition
-from collections import deque
 
 
 from app.config import BASE_URL, ETHER_VALUE, ETHERSCAN_API_KEY, url
@@ -188,8 +182,8 @@ def calculate_risk_score(address):
         startblock=0,
         endblock=99999999,
         sort="asc",
-        offset=100, 
-        page=1
+        offset=100,
+        page=1,
     )
     r = requests.get(url, timeout=REQUEST_TIMEOUT)
     data = r.json()
@@ -388,27 +382,29 @@ Summarize wallet behavior, potential risks, and red flags in 5-10 sentences.
 
     return "⚠️ Unable to complete wallet analysis after multiple attempts"
 
+
 def prepareGraph(output_path, json_data):
     """
     Tạo file graph.json.js từ chuỗi JSON
-    
+
     Parameters:
         output_path (str): Đường dẫn đến file đầu ra
         json_data (str): Chuỗi JSON chứa dữ liệu đồ thị
     """
     content = f"var rendru = {json_data};"
-    
-    with open(output_path, 'w', encoding='utf-8') as f:
+
+    with open(output_path, "w", encoding="utf-8") as f:
         f.write(content)
-    
+
     return True
+
 
 def ranker(database, top):
     newDatabase = {}
     for node in database:
         newDatabase[node] = {}
         topSize = [0] * top
-        topAdd = [''] * top
+        topAdd = [""] * top
         for each in database[node]:
             minimum = min(topSize)
             if database[node][each] > minimum:
@@ -418,6 +414,7 @@ def ranker(database, top):
         for size, address in zip(topSize, topAdd):
             newDatabase[node][address] = size
     return newDatabase
+
 
 def trace_related_nodes(raw_links, center_node, max_depth):
     visited = set()
@@ -453,6 +450,7 @@ def genLocation():
     x, y = random.randint(1, 800), random.randint(1, 500)
     return random.choice([x, -x]), random.choice([y, -y])
 
+
 def bfs_clusters(graph: nx.Graph, center_id: str) -> dict:
     clusters = {}
     visited = set()
@@ -482,7 +480,7 @@ def display_graph_pyvis(graph_json: dict, center_wallet: str = None):
     # Xác định node trung tâm
     center_id = next(
         (node["id"] for node in graph_json["nodes"] if center_wallet and center_wallet.lower() in node["id"].lower()),
-        None
+        None,
     )
 
     # Phân cụm BFS
@@ -490,18 +488,20 @@ def display_graph_pyvis(graph_json: dict, center_wallet: str = None):
 
     # Màu theo độ sâu BFS
     cluster_colors = [
-        "#FACC15", "#2dd4bf", "#3b82f6", "#8b5cf6", "#ec4899",
-        "#f97316", "#22c55e", "#f43f5e", "#eab308", "#0ea5e9"
+        "#FACC15",
+        "#2dd4bf",
+        "#3b82f6",
+        "#8b5cf6",
+        "#ec4899",
+        "#f97316",
+        "#22c55e",
+        "#f43f5e",
+        "#eab308",
+        "#0ea5e9",
     ]
 
     # Tạo PyVis graph
-    net = Network(
-        height="650px",
-        width="100%",
-        bgcolor="#0F172A",
-        font_color="white",
-        directed=False
-    )
+    net = Network(height="650px", width="100%", bgcolor="#0F172A", font_color="white", directed=False)
 
     for node_id, node_data in G.nodes(data=True):
         is_center = node_id == center_id
@@ -516,7 +516,7 @@ def display_graph_pyvis(graph_json: dict, center_wallet: str = None):
             size=size,
             color=color,
             hidden_label=True,
-            borderWidth=0
+            borderWidth=0,
         )
 
     # Thêm edge
@@ -534,7 +534,8 @@ def display_graph_pyvis(graph_json: dict, center_wallet: str = None):
         net.add_edge(u, v, value=weight, color=color)
 
     # Tuỳ chỉnh options
-    net.set_options("""
+    net.set_options(
+        """
     {
       "nodes": {
         "font": { "size": 16 },
@@ -555,7 +556,8 @@ def display_graph_pyvis(graph_json: dict, center_wallet: str = None):
         }
       }
     }
-    """)
+    """
+    )
 
     # Lưu HTML tạm
     with tempfile.NamedTemporaryFile(delete=False, suffix=".html") as tmp_file:
@@ -591,9 +593,6 @@ def display_graph_pyvis(graph_json: dict, center_wallet: str = None):
     """
 
     html = html.replace("</body>", custom_js + "</body>")
-    html = html.replace(
-        "<head>",
-        "<head><style>body { margin: 0; background-color: #0F172A !important; }</style>"
-    )
+    html = html.replace("<head>", "<head><style>body { margin: 0; background-color: #0F172A !important; }</style>")
 
     components.html(html, height=700, scrolling=False)
