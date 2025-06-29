@@ -1,4 +1,4 @@
-"""BlockTrace AI - Main Application Module"""
+"""BlockTrade AI - Main Application Module"""
 
 # Standard library imports
 import json
