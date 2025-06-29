@@ -1,9 +1,16 @@
-import os
+# Standard library imports
 import json
-import requests
+import os
 from collections import defaultdict
+
+# Third-party imports
+import requests
+
+# Local imports
 from app.main import make_api_url, genLocation, ranker, trace_related_nodes, prepareGraph
-from collections import deque
+
+# Constants
+REQUEST_TIMEOUT = 20
 
 
 def visualize_wallet(wallet_address: str, depth: int) -> tuple[bool, str]:
@@ -18,7 +25,7 @@ def visualize_wallet(wallet_address: str, depth: int) -> tuple[bool, str]:
 
         # Call Etherscan API to get ETH transactions
         url = make_api_url("account", "txlist", center_node, startblock=0, endblock=99999999, sort="asc")
-        res = requests.get(url)
+        res = requests.get(url, timeout=REQUEST_TIMEOUT)
         data = res.json()
 
         if data["status"] != "1":

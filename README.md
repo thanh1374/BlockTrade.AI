@@ -1,4 +1,3 @@
-my_project/Tracing/Desktop/BlockTrace AI/README.md
 # BlockTrace AI
 
 Ethereum wallet analysis and risk assessment tool built with Streamlit.

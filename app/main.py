@@ -1,22 +1,33 @@
-import random
-import streamlit as st
-from requests import get
-from datetime import datetime
-import requests
-import plotly.graph_objects as go
-import pandas as pd
-import plotly.express as px
-import time
+"""BlockTrace AI - Main Application Module"""
+
+# Standard library imports
 import json
-import numpy as np
-from pyvis.network import Network
-import streamlit.components.v1 as components
-import networkx as nx
+import random
 import tempfile
+import time
+from datetime import datetime
 
+# Third-party imports
+import networkx as nx
+import numpy as np
+import pandas as pd
+import requests
+from requests import get
 
+# Visualization imports
+import plotly.express as px
+import plotly.graph_objects as go
+from pyvis.network import Network
+
+# Streamlit imports
+import streamlit as st
+import streamlit.components.v1 as components
+
+# Local imports
 from app.config import BASE_URL, ETHER_VALUE, ETHERSCAN_API_KEY, url
-REQUEST_TIMEOUT = 10
+
+REQUEST_TIMEOUT = 15
+
 
 def make_api_url(module, action, address, **kwargs):
     url = BASE_URL + f"?module={module}&action={action}&address={address}&apikey={ETHERSCAN_API_KEY}"
@@ -96,6 +107,7 @@ def get_eth_price():
     response = requests.get(url, timeout=REQUEST_TIMEOUT)
     data = response.json()
     return data["ethereum"]["usd"]
+
 
 def plot_balance_over_time(address):
     # Gọi API transaction thường
