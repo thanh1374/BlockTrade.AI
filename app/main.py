@@ -144,7 +144,7 @@ def plot_balance_over_time(address):
         value = int(tx.get("value", 0)) / ETHER_VALUE
 
         gas = int(tx.get("gasUsed", 0)) * int(tx.get("gasPrice", 0)) / ETHER_VALUE if "gasPrice" in tx else 0
-        time = datetime.fromtimestamp(int(tx["timeStamp"]))
+        time1 = datetime.fromtimestamp(int(tx["timeStamp"]))
 
         if to == address.lower():
             current_balance += value
@@ -152,7 +152,7 @@ def plot_balance_over_time(address):
             current_balance -= value + gas
 
         balances.append(current_balance)
-        times.append(time)
+        times.append(time1)
 
     # Tạo biểu đồ với Plotly
     fig = go.Figure()
