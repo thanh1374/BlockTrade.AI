@@ -397,4 +397,4 @@ if st.session_state.get("wallet_analyzed") and st.session_state.get("address"):
 
 # ========== Footer ==========
 st.markdown("---")
-st.caption("© 2025 BlockTrace AI | v1.0.0 | Built by DSEB64A.NHOT")
+st.caption("© 2025 BlockTrade AI | v1.0.0 | Built by DSEB64A.NHOT")
