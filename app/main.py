@@ -124,9 +124,9 @@ def plot_balance_over_time(address):
         address,
         startblock=0,
         endblock=99999999,
-        sort="asc",
         page=1,
-        offset=10000
+        offset=10000,
+        sort="asc",
     )
     data2 = get(internal_tx_url, timeout=REQUEST_TIMEOUT).json()["result"]
 
