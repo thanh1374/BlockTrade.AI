@@ -22,7 +22,7 @@ from model import demo_gru_detection
 
 
 # ========== Page Config ==========
-st.set_page_config(page_title="BlockTrace AI", page_icon="💎", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(page_title="BlockTrade AI", page_icon="💎", layout="wide", initial_sidebar_state="expanded")
 
 # ========== Custom CSS ==========
 st.markdown(
@@ -129,7 +129,7 @@ html, body, [class*="css"] { color: var(--light-text); }
 )
 
 # ========== Header ==========
-st.markdown("<div class='title'>💎 BlockTrace AI</div>", unsafe_allow_html=True)
+st.markdown("<div class='title'>💎 BlockTrade AI</div>", unsafe_allow_html=True)
 
 # ========== Input Section ==========
 col1, col2 = st.columns([4, 1])
@@ -239,7 +239,8 @@ if st.session_state.get("wallet_analyzed") and st.session_state.get("address"):
                                 <p style="font-size: 28px; font-weight: 700; color: {color}; margin: 0 0 8px 0;">{risk_score:.1f}/10</p>
                                 <p style="font-size: 16px; color: #E2E8F0; margin-bottom: 16px;">Level: <strong style="color: #FACC15;">{level}</strong></p>
                                 <div style="height: 12px; background-color: #334155; border-radius: 6px; overflow: hidden;">
-                                    <div style="width: {risk_score * 10}%; height: 100%; background: linear-gradient(to right, {color}, #FACC15); transition: width 0.6s ease;"></div>
+                                    <div style="width: {risk_score * 10}%; height: 100%; background: linear-gradient(to right, {color}, #FACC15); transition: width 0.6s ease;">
+                                </div>
                             """,
                                 unsafe_allow_html=True,
                             )
