@@ -10,15 +10,6 @@ import pytz
 vn_timezone = pytz.timezone('Asia/Ho_Chi_Minh')
 vn_time = datetime.now(vn_timezone)
 
-results.update(
-    {
-        "risk_level": risk_level,
-        "analysis_time": vn_time.strftime("%Y-%m-%d %H:%M:%S"),
-        "num_transactions": len(transactions_df),
-    }
-)
-
-
 SEQ_LEN = 50
 FEATURES = ["value_eth", "gas_price_gwei", "gas_used_pct", "input_len", "is_contract_call", "failed"]
 
