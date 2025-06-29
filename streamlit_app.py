@@ -234,7 +234,6 @@ if st.session_state.get("wallet_analyzed") and st.session_state.get("address"):
                                 <p style="font-size: 16px; color: #E2E8F0; margin-bottom: 16px;">Level: <strong style="color: #FACC15;">{level}</strong></p>
                                 <div style="height: 12px; background-color: #334155; border-radius: 6px; overflow: hidden;">
                                     <div style="width: {risk_score * 10}%; height: 100%; background: linear-gradient(to right, {color}, #FACC15); transition: width 0.6s ease;"></div>
-                                </div>
                             """,
                             unsafe_allow_html=True,
                         )
