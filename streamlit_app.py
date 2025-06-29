@@ -3,10 +3,9 @@ BlockTrace AI - Ethereum Wallet Analysis Tool
 Copyright (c) 2025 TRADE.AI.NHOT
 Licensed under the MIT License - see LICENSE file for details
 """
-
-import streamlit as st
 import json
 import pandas as pd
+import streamlit as st
 
 from app.main import (
     get_account_balance,
