@@ -1,5 +1,5 @@
 """
-BlockTrace AI - Ethereum Wallet Analysis Tool
+BlockTrade AI - Ethereum Wallet Analysis Tool
 Copyright (c) 2025 TRADE.AI.NHOT
 Licensed under the MIT License - see LICENSE file for details
 """
