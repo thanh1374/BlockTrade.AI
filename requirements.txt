@@ -12,5 +12,5 @@ numpy
 werkzeug
 pyvis
 python-louvain
-tensorflow==2.11.0
+tensorflow==2.19.0
 protobuf
