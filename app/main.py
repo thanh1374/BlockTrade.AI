@@ -1,5 +1,4 @@
 import random
-import logging
 import streamlit as st
 from requests import get
 from matplotlib import pyplot as plt
@@ -36,6 +35,7 @@ def make_api_url(module, action, address, **kwargs):
 
 def get_account_balance(address):
     balance_url = make_api_url("account", "balance", address, tag="latest")
+    time.sleep(0.6)
     response = get(balance_url, timeout=REQUEST_TIMEOUT)
     data = response.json()
     value = int(data["result"]) / ETHER_VALUE
@@ -51,6 +51,7 @@ def classify_wallet(address):
         return "CEX"
 
     code_url = make_api_url("proxy", "eth_getCode", address)
+    time.sleep(0.6)
     response = requests.get(code_url, timeout=REQUEST_TIMEOUT)
     code = response.json().get("result", "")
     if code != "0x":
@@ -70,6 +71,7 @@ def get_latest_transactions(address, limit=10):
         offset=limit,
         sort="desc",
     )
+    time.sleep(0.6)
     response = requests.get(latest_tx_url, timeout=REQUEST_TIMEOUT)
     transactions = response.json().get("result", [])
 
@@ -104,113 +106,79 @@ def get_eth_price():
     return data["ethereum"]["usd"]
 
 def plot_balance_over_time(address):
-    try:
-        # Call API for regular transactions
-        transactions_url = make_api_url(
-            "account",
-            "txlist",
-            address,
-            startblock=0,
-            endblock=99999999,
-            page=1,
-            offset=10000,
-            sort="asc",
+    # Gọi API transaction thường
+    transactions_url = make_api_url(
+        "account",
+        "txlist",
+        address,
+        startblock=0,
+        endblock=99999999,
+        page=1,
+        offset=10000,
+        sort="asc",
+    )
+    data = get(transactions_url, timeout=REQUEST_TIMEOUT).json()["result"]
+    time.sleep(1)
+    # Gọi API internal transaction
+    internal_tx_url = make_api_url(
+        "account",
+        "txlistinternal",
+        address,
+        startblock=0,
+        endblock=99999999,
+        page=1,
+        offset=10000,
+        sort="asc",
+    )
+    data2 = get(internal_tx_url, timeout=REQUEST_TIMEOUT).json()["result"]
+
+    data.extend(data2)
+    data.sort(key=lambda x: int(x["timeStamp"]))
+
+    # Tính toán số dư theo thời gian
+    current_balance = 0
+    balances = []
+    times = []
+
+    for tx in data:
+        to = tx.get("to", "").lower()
+        from_addr = tx.get("from", "").lower()
+        value = int(tx.get("value", 0)) / ETHER_VALUE
+
+        gas = int(tx.get("gasUsed", 0)) * int(tx.get("gasPrice", 0)) / ETHER_VALUE if "gasPrice" in tx else 0
+        time = datetime.fromtimestamp(int(tx["timeStamp"]))
+
+        if to == address.lower():
+            current_balance += value
+        elif from_addr == address.lower():
+            current_balance -= value + gas
+
+        balances.append(current_balance)
+        times.append(time)
+
+    # Tạo biểu đồ với Plotly
+    fig = go.Figure()
+    fig.add_trace(
+        go.Scatter(
+            x=times,
+            y=balances,
+            mode="lines+markers",
+            name="ETH Balance",
+            line=dict(color="royalblue", width=2),
+            marker=dict(size=4),
         )
-        response = get(transactions_url, timeout=REQUEST_TIMEOUT).json()
-        data = response.get("result", [])
-        
-        # Check if data is a string
-        if isinstance(data, str):
-            logging.warning(f"API txlist returned string: {data}. Converting to empty list.")
-            data = []
-        elif not isinstance(data, list):
-            logging.warning(f"API txlist returned unexpected type: {type(data)}. Converting to empty list.")
-            data = []
+    )
 
-        # Call API for internal transactions
-        internal_tx_url = make_api_url(
-            "account",
-            "txlistinternal",
-            address,
-            startblock=0,
-            endblock=99999999,
-            page=1,
-            offset=10000,
-            sort="asc",
-        )
-        response2 = get(internal_tx_url, timeout=REQUEST_TIMEOUT).json()
-        data2 = response2.get("result", [])
-        
-        # Check if data2 is a string
-        if isinstance(data2, str):
-            logging.warning(f"API txlistinternal returned string: {data2}. Converting to empty list.")
-            data2 = []
-        elif not isinstance(data2, list):
-            logging.warning(f"API txlistinternal returned unexpected type: {type(data2)}. Converting to empty list.")
-            data2 = []
+    fig.update_layout(
+        xaxis_title="⏱ Time",
+        yaxis_title="💰 Balance",
+        template="plotly_white",
+        hovermode="x unified",
+        margin=dict(l=20, r=20, t=50, b=30),
+        height=400,
+    )
 
-        # Merge lists
-        data.extend(data2)
-        if data:  # Only sort if the list is not empty
-            data.sort(key=lambda x: int(x["timeStamp"]))
-        else:
-            logging.warning("No transactions found.")
-
-        # Calculate balance over time
-        current_balance = 0
-        balances = []
-        times = []
-
-        for tx in data:
-            to = tx.get("to", "").lower()
-            from_addr = tx.get("from", "").lower()
-            value = int(tx.get("value", 0)) / ETHER_VALUE
-
-            # Calculate gas fee (if gasPrice exists)
-            gas = int(tx.get("gasUsed", 0)) * int(tx.get("gasPrice", 0)) / ETHER_VALUE if "gasPrice" in tx else 0
-            time = datetime.fromtimestamp(int(tx["timeStamp"]))
-
-            if to == address.lower():
-                current_balance += value
-            elif from_addr == address.lower():
-                current_balance -= (value + gas)
-
-            balances.append(current_balance)
-            times.append(time)
-
-        # Create Plotly chart
-        fig = go.Figure()
-        fig.add_trace(
-            go.Scatter(
-                x=times,
-                y=balances,
-                mode="lines+markers",
-                name="ETH Balance",
-                line=dict(color="royalblue", width=2),
-                marker=dict(size=4),
-            )
-        )
-
-        fig.update_layout(
-            xaxis_title="⏱ Time",
-            yaxis_title="💰 Balance",
-            template="plotly_white",
-            hovermode="x unified",
-            margin=dict(l=20, r=20, t=50, b=30),
-            height=400,
-        )
-
-        st.plotly_chart(fig, use_container_width=True)
-
-    except requests.exceptions.RequestException as e:
-        logging.error(f"API request error: {e}")
-        st.error("Failed to fetch transaction data. Please try again later.")
-    except ValueError as e:
-        logging.error(f"Data processing error: {e}")
-        st.error("Invalid transaction data.")
-    except Exception as e:
-        logging.error(f"Unexpected error: {e}")
-        st.error("An error occurred. Please check the address or try again later.")
+    st.plotly_chart(fig, use_container_width=True)
 
 
 def calculate_risk_score(address):
