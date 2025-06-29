@@ -90,7 +90,7 @@ def demo_gru_detection(raw_transactions: pd.DataFrame) -> Dict:
     detector = MEVDetector()
     results = detector.predict(transactions_df)
     # Add interpretation
-    risk_level = "High" if results["prob"] > 0.8 else "Medium" if results["prob"] > 0.4 else "Low"
+    risk_level = "High" if results["prob"] > 0.7 else "Medium" if results["prob"] > 0.3 else "Low"
 
     results.update(
         {
