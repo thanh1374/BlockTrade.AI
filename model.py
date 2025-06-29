@@ -5,6 +5,20 @@ import numpy as np
 import pandas as pd
 import tensorflow as tf
 
+import pytz
+
+vn_timezone = pytz.timezone('Asia/Ho_Chi_Minh')
+vn_time = datetime.now(vn_timezone)
+
+results.update(
+    {
+        "risk_level": risk_level,
+        "analysis_time": vn_time.strftime("%Y-%m-%d %H:%M:%S"),
+        "num_transactions": len(transactions_df),
+    }
+)
+
+
 SEQ_LEN = 50
 FEATURES = ["value_eth", "gas_price_gwei", "gas_used_pct", "input_len", "is_contract_call", "failed"]
 
@@ -85,12 +99,12 @@ def demo_gru_detection(raw_transactions: pd.DataFrame) -> Dict:
     detector = MEVDetector()
     results = detector.predict(transactions_df)
     # Add interpretation
-    risk_level = "High" if results["prob"] > 0.7 else "Medium" if results["prob"] > 0.3 else "Low"
+    risk_level = "High" if results["prob"] > 0.8 else "Medium" if results["prob"] > 0.4 else "Low"
 
     results.update(
         {
             "risk_level": risk_level,
-            "analysis_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "analysis_time": vn_time.strftime("%Y-%m-%d %H:%M:%S"),
             "num_transactions": len(transactions_df),
         }
     )
