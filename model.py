@@ -10,7 +10,7 @@ import pytz
 vn_timezone = pytz.timezone('Asia/Ho_Chi_Minh')
 vn_time = datetime.now(vn_timezone)
 
-SEQ_LEN = 50
+SEQ_LEN = 100
 FEATURES = ["value_eth", "gas_price_gwei", "gas_used_pct", "input_len", "is_contract_call", "failed"]
 
 
