@@ -194,7 +194,7 @@ def calculate_risk_score(address):
         startblock=0,
         endblock=99999999,
         sort="asc",
-        offset=100,
+        offset=50,
         page=1,
     )
     r = requests.get(url, timeout=REQUEST_TIMEOUT)
