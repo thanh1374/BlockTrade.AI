@@ -23,8 +23,6 @@ from collections import deque
 
 from app.config import BASE_URL, ETHER_VALUE, ETHERSCAN_API_KEY, url
 REQUEST_TIMEOUT = 10
-logging.basicConfig(level=logging.INFO)
-
 
 def make_api_url(module, action, address, **kwargs):
     url = BASE_URL + f"?module={module}&action={action}&address={address}&apikey={ETHERSCAN_API_KEY}"
